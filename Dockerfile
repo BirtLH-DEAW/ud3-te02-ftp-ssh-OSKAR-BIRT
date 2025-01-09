@@ -7,10 +7,14 @@ LABEL \
     description="Ubuntu + Apache2 + virtual host" \
     maintainer="usuarioBIRT <usuarioBIRT@birt.eus>"
 
-# Actualizamos la lista de paquetes e instalamos nano y apache2
+# Actualizamos la lista de paquetes e instalamos nano, apache2 y el servidor proftpd
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y nano apache2 && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y nano apache2 && \
+    apt-get install openssl && \
+    apt-get install -y proftpd && \
+    apt-get install -y proftpd-mod-crypto && \
+    rm -rf /var/lib/apt/lists/* 
+
 
 # Creamos directorios para los sitios web y configuraciones
 RUN mkdir -p /var/www/html/sitioprimero /var/www/html/sitiosegundo
@@ -31,10 +35,30 @@ RUN a2ensite sitioprimero.conf && \
     a2ensite sitiosegundo.conf && \
     a2enmod ssl
 
-# Exponemos los puertos
+
+# Creamos el usuario oskar1 con password deaw
+RUN useradd -m -d  /var/www/html/sitioprimero -s /sbin/nologin oskar1
+RUN echo "oskar1:deaw" | chpasswd
+
+# Copiamos nuestros archivos al contenedor creando las carpetas
+# RUN mkdir /var/www/html/default_website \
+COPY Entrega/proftpd.conf /etc/proftpd/proftpd.conf
+COPY Entrega/tls.conf /etc/proftpd/tls.conf
+COPY Entrega/modules.conf /etc/proftpd/modules.conf
+COPY Entrega/proftpd.pem /etc/ssl/certs/proftpd.pem
+COPY Entrega/proftpd.key /etc/ssl/private/proftpd.key
+RUN chmod 640 /etc/ssl/certs/proftpd.pem
+RUN chmod 640 /etc/ssl/private/proftpd.key
+
+
+
+# Exponemos los puertos para http, https y ftp
 EXPOSE 80
 EXPOSE 443
+EXPOSE 21
+EXPOSE 50000:50030
 
-# Comando por defecto al iniciar el contenedor
-CMD ["apachectl", "-D", "FOREGROUND"]
-
+# Comando por defecto al iniciar el contenedor (un script de inicio para ambos servicios)
+COPY Entrega/inicio.sh /
+RUN chmod +x /inicio.sh
+CMD ["/inicio.sh"]
