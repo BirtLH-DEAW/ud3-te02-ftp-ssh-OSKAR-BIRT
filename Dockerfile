@@ -1,5 +1,5 @@
 # Utilizamos una imagen oficial de Ubuntu
-FROM ubuntu:18.04
+FROM ubuntu:latest
 
 # Damos información sobre la imagen que estamos creando
 LABEL \
@@ -13,22 +13,22 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Creamos directorios para los sitios web y configuraciones
-RUN mkdir -p /var/www/html/sitio1 /var/www/html/sitio2
+RUN mkdir -p /var/www/html/sitioprimero /var/www/html/sitiosegundo
 
 # Copiamos archivos al contenedor
-COPY index1.html index2.html sitio1.conf sitio2.conf sitio1.key sitio1.cer /
+COPY indexprimero.html indexsegundo.html sitioprimero.conf sitiosegundo.conf sitioprimero.key sitioprimero.cer /
 
 # Movemos los archivos a sus ubicaciones adecuadas
-RUN mv /index1.html /var/www/html/sitio1/index.html && \
-    mv /index2.html /var/www/html/sitio2/index.html && \
-    mv /sitio1.conf /etc/apache2/sites-available/sitio1.conf && \
-    mv /sitio2.conf /etc/apache2/sites-available/sitio2.conf && \
-    mv /sitio1.key /etc/ssl/private/sitio1.key && \
-    mv /sitio1.cer /etc/ssl/certs/sitio1.cer
+RUN mv /indexprimero.html /var/www/html/sitioprimero/index.html && \
+    mv /indexsegundo.html /var/www/html/sitiosegundo/index.html && \
+    mv /sitioprimero.conf /etc/apache2/sites-available/sitioprimero.conf && \
+    mv /sitiosegundo.conf /etc/apache2/sites-available/sitiosegundo.conf && \
+    mv /sitioprimero.key /etc/ssl/private/sitioprimero.key && \
+    mv /sitioprimero.cer /etc/ssl/certs/sitioprimero.cer
 
 # Habilitamos los sitios y el módulo SSL
-RUN a2ensite sitio1.conf && \
-    a2ensite sitio2.conf && \
+RUN a2ensite sitioprimero.conf && \
+    a2ensite sitiosegundo.conf && \
     a2enmod ssl
 
 # Exponemos los puertos
@@ -36,4 +36,5 @@ EXPOSE 80
 EXPOSE 443
 
 # Comando por defecto al iniciar el contenedor
-CMD ["apache2-foreground"]
+CMD ["apachectl", "-D", "FOREGROUND"]
+
